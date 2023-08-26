@@ -1,0 +1,130 @@
+
+Course End Project 2: GITHUb, Jenkins & Docker
+============================
+
+Step 1: 
+Availability of the application and its versions in the GitHub
+
+https://github.com/Sonal0409/DevOpsCodeDemo.git
+
+Step 2:
+
+Create a Docker Jenkins Pipeline that will create a Docker image from the Dockerfile and host it on Docker Hub
+
+Dockerfile used is:
+
+FROM tomcat:9
+ADD addressbook.war /usr/local/tomcat/webapps
+CMD ["catalina.sh", "run"]
+EXPOSE 8080
+
+Step 2.1:
+===============================
+
+
+Loginto Jenkins
+
+> Set up Maven tool in  Manage jenkins --> configure global tools--> scroll down --> add maven --> give tool name as mymaven--> save the chnages
+
+Step 2.2:
+=========================
+> Create the pipeline for building the code using mavem
+> Go to console output of the job, copy the path of war file generated
+
+For me it is:
+
+/var/lib/jenkins/workspace/Project2-Pipeline/target/addressbook.war
+
+Step2.3:
+======================
+
+Continue the pipeline with step to 
+
+GIve permissions to jenkins user to run docker command, exeucte below command:
+
+chmod 777 /var/run/docker.sock
+
+> Copy the .war file in current workspace
+> build the dockerfile which is jobs current workpace
+
+
+Step 2.4:
+=========================
+
+Continue the pipeline to add step that will:
+
+ > loginto docker hub
+
+ > chnage the image name to tag dockerhub account(repo)
+
+ > push the image to docker hub
+
+> delete the image from local
+
+ > create container from the image
+
+pipeline{
+    tools{
+        maven 'mymaven'
+    }
+    
+    agent any
+    
+    stages{
+        stage('Clone the repo'){
+            
+            steps{
+                git 'https://github.com/Sonal0409/DevOpsCodeDemo.git'
+            }
+            
+        }
+        
+        stage('build the code'){
+            steps{
+                sh 'mvn package'
+            }
+        }
+        stage('build the Image'){
+            steps{
+                sh 'cp /var/lib/jenkins/workspace/Project2-Pipeline/target/addressbook.war .'
+                sh 'docker build -t myaddressbook .'
+            }
+        }
+        
+        stage('push image to DockerHub'){
+            steps{
+ 
+                 sh 'docker login -u sonal04 -p abc@123 '
+}
+                sh 'docker tag myaddressbook sonal04/myaddressbook'
+                sh 'docker push sonal04/myaddressbook'
+                sh 'docker rmi sonal04/myaddressbook'
+            }
+        }
+        
+        stage('Create containers'){
+            steps{
+                sh 'docker run -d -P sonal04/myaddressbook'
+            }
+        }
+    }
+}
+
+=============
+
+Step 2.4:
+================
+
+Build the pipeline. on completion:
+
+Take screenshot of Job stage view
+
+Take screenshot of pipeline section
+
+Copy the entire pipeline in the project submission document
+
+Take screenshot of application accessed form browser
+
+ go to browser==> localhost:32768/addressbook
+
+Take screenshot of dockerhub where image is pushed.
